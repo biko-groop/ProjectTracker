@@ -2,6 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
+# منطق التشغيل ملفوف بالكامل داخل /bin/bash -c لضمان توافق Railway (لا subshell في البداية).
 # عند DB_FRESH=1 يصفّر قاعدة البيانات مرة واحدة (لإصلاح حالة متّسخة)، وإلا migrate آمن.
 # ProductionSeeder يُنشئ الأدمن (idempotent) قبل تخزين الكاش.
-startCommand = "(if [ \"$DB_FRESH\" = \"1\" ]; then php artisan migrate:fresh --force; else php artisan migrate --force; fi) && php artisan db:seed --class=ProductionSeeder --force && php artisan storage:link --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=$PORT"
+startCommand = "/bin/bash -c 'if [ \"$DB_FRESH\" = \"1\" ]; then php artisan migrate:fresh --force; else php artisan migrate --force; fi && php artisan db:seed --class=ProductionSeeder --force && php artisan storage:link --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=$PORT'"
