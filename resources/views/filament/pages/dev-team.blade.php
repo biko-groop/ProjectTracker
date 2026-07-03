@@ -62,14 +62,8 @@
 
     {{-- Hero --}}
     <div class="qd-hero">
-        @php
-            $qdLogo = \App\Models\Setting::current()->logo;
-            $qdLogoUrl = $qdLogo
-                ? asset('storage/' . $qdLogo)
-                : asset('images/quantum-logo.png');
-        @endphp
         <div style="background:#fff;border-radius:1rem;padding:1rem 1.5rem;display:inline-block;box-shadow:0 8px 24px rgba(0,0,0,.18);margin-bottom:1rem;">
-            <img src="{{ $qdLogoUrl }}" alt="Quantum Dev Team"
+            <img src="{{ asset('images/quantum-logo.png') }}" alt="Quantum Dev Team"
                  style="max-height:140px;max-width:100%;display:block;"
                  onerror="this.style.display='none';document.getElementById('qd-fallback').style.display='block';">
             <div id="qd-fallback" style="display:none;">
