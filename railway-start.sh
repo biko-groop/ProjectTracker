@@ -41,6 +41,8 @@ fi
 
 # لا تحتاج قاعدة بيانات — تعمل دائماً:
 php artisan storage:link --force || true
+# نشر أصول Filament (CSS/JS) لضمان مطابقتها لإصدار الحزمة داخل الحاوية:
+php artisan filament:assets || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
