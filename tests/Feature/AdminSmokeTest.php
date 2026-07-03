@@ -38,6 +38,7 @@ class AdminSmokeTest extends TestCase
             '/admin/audit-logs',
             '/admin/my-notifications',
             '/admin/dev-team',
+            '/admin/my-tasks',
             '/reports/print?type=projects',
             '/reports/export?type=workload',
         ];

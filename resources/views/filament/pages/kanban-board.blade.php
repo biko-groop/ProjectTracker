@@ -1,4 +1,11 @@
 <x-filament-panels::page>
+    <style>
+        .kanban-grid { display:grid; grid-template-columns:repeat(4,minmax(220px,1fr)); gap:1rem; align-items:start; overflow-x:auto; }
+        @media (max-width: 768px) {
+            /* على الجوال: تكديس الأعمدة عمودياً بدل التمرير الأفقي */
+            .kanban-grid { grid-template-columns:1fr !important; overflow-x:visible !important; }
+        }
+    </style>
     {{-- فلتر المشروع --}}
     <div style="max-width:24rem;margin-bottom:1rem;">
         <label style="display:block;font-weight:600;margin-bottom:.25rem;">المشروع</label>
@@ -12,8 +19,7 @@
     </div>
 
     {{-- لوحة الأعمدة --}}
-    <div wire:ignore.self
-         style="display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:1rem;align-items:start;overflow-x:auto;">
+    <div wire:ignore.self class="kanban-grid">
         @foreach ($this->getBoard() as $key => $col)
             <div style="background:rgba(148,163,184,.12);border-radius:.75rem;padding:.75rem;min-height:200px;">
                 <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;font-weight:700;">

@@ -33,7 +33,8 @@
             </div>
         </div>
 
-        <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem;min-width:520px;">
             <thead>
                 <tr>
                     @foreach ($report['headers'] as $h)
@@ -57,6 +58,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
 </x-filament-panels::page>
