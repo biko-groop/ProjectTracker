@@ -115,7 +115,11 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook('panels::body.start', fn (): string => '<style>
                 .fi-simple-layout { background: linear-gradient(135deg, rgb(var(--primary-500)) 0%, rgb(var(--primary-700)) 60%, rgb(var(--primary-900)) 100%) !important; }
                 .fi-simple-main { box-shadow: 0 18px 50px rgba(0,0,0,.25) !important; border-radius: 1rem !important; }
-                .fi-simple-layout .fi-logo { color: #fff !important; }
+                /* شعار صفحة الدخول: كبير وواضح واحترافي (مقصور على صفحة الدخول فقط) */
+                .fi-simple-layout .fi-logo { color: #fff !important; width: 100%; justify-content: center; margin-bottom: .25rem; }
+                .fi-simple-layout .fi-logo > div { flex-direction: column !important; align-items: center !important; gap: .85rem !important; text-align: center; }
+                .fi-simple-layout .fi-logo img { height: 5.5rem !important; width: auto !important; max-width: 240px !important; border-radius: 1rem !important; }
+                .fi-simple-layout .fi-logo span { font-size: 1.5rem !important; white-space: normal !important; }
             </style>');
 
         // سايد بار داكن بلون الهوية المُختار (يتغيّر مع اللون)

@@ -70,14 +70,16 @@ class ManageAppearance extends Page implements HasForms
         return $form
             ->schema([
                 Section::make('الهوية العامة')
-                    ->description('اسم النظام والشعار')
+                    ->description('اسم الشركة/النظام والشعار — يظهران في صفحة الدخول وأعلى القائمة الجانبية')
                     ->schema([
                         TextInput::make('app_name')
-                            ->label('اسم النظام')
+                            ->label('اسم الشركة / النظام')
+                            ->helperText('يظهر في شريط العنوان وصفحة تسجيل الدخول')
                             ->required()
                             ->maxLength(255),
                         FileUpload::make('logo')
-                            ->label('الشعار')
+                            ->label('شعار النظام')
+                            ->helperText('يُفضّل صورة PNG شفافة. يظهر بحجم كبير في صفحة الدخول. اتركه فارغًا لاستخدام أيقونة افتراضية.')
                             ->image()
                             ->disk('public')
                             ->directory('logos')
