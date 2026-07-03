@@ -7,14 +7,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     // السماح بالدخول للوحة لكل مستخدم نشط (الصلاحيات التفصيلية على مستوى كل مورد)
     public function canAccessPanel(Panel $panel): bool
     {
         return (bool) $this->is_active;
+    }
+
+    // صورة المستخدم في قائمة اللوحة (وإلا يُستخدم الافتراضي)
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
     }
 
     protected $fillable = [
