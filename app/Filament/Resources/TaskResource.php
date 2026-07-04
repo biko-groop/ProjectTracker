@@ -339,6 +339,23 @@ class TaskResource extends Resource
                 Tables\Filters\SelectFilter::make('project_id')
                     ->label(__('Project'))
                     ->relationship('project', 'name'),
+                // فلتر القسم: يشمل القسم الرئيسي للمهمة + الأقسام المعنية المرتبطة بها
+                Tables\Filters\SelectFilter::make('department')
+                    ->label('القسم')
+                    ->options(fn () => \App\Models\Department::orderBy('name')->pluck('name', 'id'))
+                    ->searchable()
+                    ->query(function (Builder $query, array $data): Builder {
+                        $id = $data['value'] ?? null;
+
+                        if (blank($id)) {
+                            return $query;
+                        }
+
+                        return $query->where(function (Builder $q) use ($id): void {
+                            $q->where('department_id', $id)
+                                ->orWhereHas('departmentLinks', fn (Builder $dl) => $dl->where('department_id', $id));
+                        });
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
