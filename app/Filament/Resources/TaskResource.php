@@ -367,6 +367,11 @@ class TaskResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
+            // تثبيت الفلاتر والبحث والفرز في الجلسة: تبقى عند التنقّل/التحديث/العودة،
+            // وتُمسح تلقائياً عند تسجيل الخروج (إبطال الجلسة). سلوك مشابه لأنظمة مثل Odoo.
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession()
             ->defaultSort('created_at', 'desc');
     }
 
