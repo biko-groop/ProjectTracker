@@ -1,6 +1,8 @@
 <x-filament-panels::page>
     @php $report = $this->getReport(); @endphp
 
+    @php $linkParams = $this->getLinkParams(); @endphp
+
     {{-- أدوات التحكم (تُخفى عند الطباعة) --}}
     <div class="no-print" style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;margin-bottom:1rem;">
         <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
@@ -13,16 +15,65 @@
             @endforeach
         </div>
         <div style="display:flex;gap:.4rem;">
-            <a href="{{ route('reports.print', ['type' => $type]) }}" target="_blank"
+            <a href="{{ route('reports.print', $linkParams) }}" target="_blank"
                style="padding:.45rem .9rem;border-radius:.5rem;border:1px solid rgba(0,0,0,.12);cursor:pointer;text-decoration:none;color:inherit;background:#fff;">
                 🖨️ طباعة / PDF
             </a>
-            <a href="{{ route('reports.export', ['type' => $type]) }}"
+            <a href="{{ route('reports.export', $linkParams) }}"
                style="padding:.45rem .9rem;border-radius:.5rem;border:0;cursor:pointer;text-decoration:none;color:#fff;background:#16a34a;">
                 ⬇️ تصدير Excel
             </a>
         </div>
     </div>
+
+    {{-- الفلاتر الذكية (لتقارير المهام/التأخير) --}}
+    @if ($this->supportsFilters())
+        <div class="no-print" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;margin-bottom:1rem;padding:.85rem 1rem;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.12);border-radius:.75rem;">
+            @if ($this->isPrivileged())
+                <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.78rem;font-weight:700;color:#475569;">
+                    النطاق
+                    <select wire:model.live="scope"
+                            style="padding:.4rem .6rem;border-radius:.5rem;border:1px solid rgba(0,0,0,.15);font-size:.85rem;min-width:170px;background:#fff;">
+                        <option value="all">كل المهام</option>
+                        <option value="mine">مهامي والمرتبطة بي</option>
+                    </select>
+                </label>
+            @else
+                <span style="font-size:.8rem;font-weight:700;color:rgb(var(--primary-700));background:rgba(99,102,241,.12);padding:.35rem .7rem;border-radius:99px;">
+                    📌 يعرض التقرير مهامك والمرتبطة بك فقط
+                </span>
+            @endif
+
+            <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.78rem;font-weight:700;color:#475569;">
+                القسم
+                <select wire:model.live="department"
+                        style="padding:.4rem .6rem;border-radius:.5rem;border:1px solid rgba(0,0,0,.15);font-size:.85rem;min-width:170px;background:#fff;">
+                    <option value="">كل الأقسام</option>
+                    @foreach ($this->getDepartments() as $id => $name)
+                        <option value="{{ $id }}">{{ $name }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            @if ($type === 'tasks')
+                <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.78rem;font-weight:700;color:#475569;">
+                    الحالة
+                    <select wire:model.live="status"
+                            style="padding:.4rem .6rem;border-radius:.5rem;border:1px solid rgba(0,0,0,.15);font-size:.85rem;min-width:150px;background:#fff;">
+                        <option value="">كل الحالات</option>
+                        @foreach ($this->getStatuses() as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            @endif
+
+            <button wire:click="clearFilters"
+                    style="padding:.45rem .8rem;border-radius:.5rem;border:1px solid rgba(0,0,0,.15);background:#fff;font-size:.8rem;cursor:pointer;color:#475569;">
+                ↺ مسح الفلاتر
+            </button>
+        </div>
+    @endif
 
     {{-- منطقة التقرير (قابلة للطباعة) --}}
     <div id="print-area" style="background:var(--fi-color-white,#fff);border-radius:.75rem;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.08);">

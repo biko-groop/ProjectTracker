@@ -30,15 +30,71 @@ class ReportService
         'low' => 'منخفض', 'medium' => 'متوسط', 'high' => 'عالٍ', 'urgent' => 'عاجل',
     ];
 
-    public function build(string $type): array
+    public function build(string $type, array $filters = []): array
     {
         return match ($type) {
-            'tasks' => $this->tasks(),
+            'tasks' => $this->tasks($filters),
             'workload' => $this->workload(),
-            'delays' => $this->delays(),
+            'delays' => $this->delays($filters),
             'departments' => $this->departments(),
             default => $this->projects(),
         };
+    }
+
+    /**
+     * يطبّق فلاتر النطاق (مهامي)، القسم (رئيسي أو معني)، والحالة على استعلام المهام.
+     */
+    private function applyTaskFilters($query, array $filters)
+    {
+        // النطاق: مهامي والمرتبطة بي
+        if (($filters['scope'] ?? 'all') === 'mine' && ! empty($filters['user_id'])) {
+            $uid = $filters['user_id'];
+            $deptId = $filters['user_department_id'] ?? null;
+
+            $query->where(function ($q) use ($uid, $deptId) {
+                $q->where('assigned_to', $uid)->orWhere('created_by', $uid);
+                if ($deptId) {
+                    $q->orWhere('department_id', $deptId)
+                        ->orWhereHas('departmentLinks', fn ($dl) => $dl->where('department_id', $deptId));
+                }
+            });
+        }
+
+        // القسم: رئيسي أو معني
+        if (! empty($filters['department'])) {
+            $did = $filters['department'];
+            $query->where(function ($q) use ($did) {
+                $q->where('department_id', $did)
+                    ->orWhereHas('departmentLinks', fn ($dl) => $dl->where('department_id', $did));
+            });
+        }
+
+        // الحالة
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * لاحقة توضّح الفلاتر المطبّقة في عنوان التقرير.
+     */
+    private function filterSuffix(array $filters): string
+    {
+        $parts = [];
+
+        if (($filters['scope'] ?? 'all') === 'mine') {
+            $parts[] = 'مهامي والمرتبطة بي';
+        }
+        if (! empty($filters['department_label'])) {
+            $parts[] = 'القسم: ' . $filters['department_label'];
+        }
+        if (! empty($filters['status'])) {
+            $parts[] = 'الحالة: ' . ($this->status[$filters['status']] ?? $filters['status']);
+        }
+
+        return $parts ? ' — ' . implode(' · ', $parts) : '';
     }
 
     private function projects(): array
@@ -60,11 +116,15 @@ class ReportService
         ];
     }
 
-    private function tasks(): array
+    private function tasks(array $filters = []): array
     {
-        $rows = Task::with(['project', 'assignedUser'])->orderByDesc('created_at')->get()->map(fn (Task $t) => [
+        $query = Task::with(['project', 'assignedUser', 'department']);
+        $this->applyTaskFilters($query, $filters);
+
+        $rows = $query->orderByDesc('created_at')->get()->map(fn (Task $t) => [
             $t->title,
             optional($t->project)->name ?? '—',
+            optional($t->department)->name ?? '—',
             $this->status[$t->status] ?? $t->status,
             $this->priority[$t->priority] ?? $t->priority,
             optional($t->assignedUser)->name ?? '—',
@@ -74,8 +134,8 @@ class ReportService
         ])->toArray();
 
         return [
-            'title' => 'تقرير المهام',
-            'headers' => ['المهمة', 'المشروع', 'الحالة', 'الأولوية', 'المسؤول', 'الإنجاز', 'تاريخ النهاية', 'متأخر؟'],
+            'title' => 'تقرير المهام' . $this->filterSuffix($filters),
+            'headers' => ['المهمة', 'المشروع', 'القسم', 'الحالة', 'الأولوية', 'المسؤول', 'الإنجاز', 'تاريخ النهاية', 'متأخر؟'],
             'rows' => $rows,
         ];
     }
@@ -111,14 +171,18 @@ class ReportService
         ];
     }
 
-    private function delays(): array
+    private function delays(array $filters = []): array
     {
         $today = Carbon::today();
 
-        $rows = Task::with(['project', 'assignedUser'])
+        $query = Task::with(['project', 'assignedUser'])
             ->whereNotIn('status', ['completed', 'cancelled'])
-            ->whereDate('due_date', '<', $today)
-            ->orderBy('due_date')
+            ->whereDate('due_date', '<', $today);
+
+        // النطاق والقسم فقط (الحالة ثابتة: متأخرة)
+        $this->applyTaskFilters($query, ['scope' => $filters['scope'] ?? 'all', 'user_id' => $filters['user_id'] ?? null, 'user_department_id' => $filters['user_department_id'] ?? null, 'department' => $filters['department'] ?? null]);
+
+        $rows = $query->orderBy('due_date')
             ->get()
             ->map(fn (Task $t) => [
                 $t->title,
@@ -130,7 +194,7 @@ class ReportService
             ])->toArray();
 
         return [
-            'title' => 'تقرير التأخير',
+            'title' => 'تقرير التأخير' . $this->filterSuffix(['scope' => $filters['scope'] ?? 'all', 'department_label' => $filters['department_label'] ?? null]),
             'headers' => ['المهمة', 'المشروع', 'المسؤول', 'تاريخ النهاية', 'أيام التأخير', 'سبب التأخير'],
             'rows' => $rows,
         ];
