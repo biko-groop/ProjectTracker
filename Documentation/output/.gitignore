@@ -1,0 +1,6 @@
+# نواتج Pandoc الثنائية تُولَّد عند الطلب — لا تُلتزم في Git
+*.docx
+*.pdf
+
+# نُبقي النسخة الموحّدة HTML (جاهزة للطباعة/Word) ملتزمة كمُخرَج جاهز.
+!Qurtuba-Project-Tracker-Documentation.html
