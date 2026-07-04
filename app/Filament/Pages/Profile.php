@@ -55,7 +55,23 @@ class Profile extends Page implements HasForms
                             ->maxSize(2048)
                             ->imageEditor(),
                         TextInput::make('name')->label('الاسم')->required()->maxLength(255),
-                        TextInput::make('phone')->label('الهاتف')->tel()->maxLength(255),
+                        TextInput::make('phone')
+                            ->label('الهاتف أو البريد الإلكتروني')
+                            ->helperText('يمكنك إدخال رقم هاتف أو بريد إلكتروني للتواصل')
+                            ->maxLength(255)
+                            // يقبل بريدًا إلكترونيًا أو رقم هاتف — أيّهما دون خطأ
+                            ->rule(function () {
+                                return function (string $attribute, $value, \Closure $fail): void {
+                                    if (blank($value)) {
+                                        return;
+                                    }
+                                    $isEmail = (bool) filter_var($value, FILTER_VALIDATE_EMAIL);
+                                    $isPhone = (bool) preg_match('/^[0-9+\-\s()]{6,}$/', $value);
+                                    if (! $isEmail && ! $isPhone) {
+                                        $fail('أدخل رقم هاتف صحيح أو بريدًا إلكترونيًا صحيحًا.');
+                                    }
+                                };
+                            }),
                     ])->columns(2),
 
                 Section::make('تغيير كلمة المرور')
