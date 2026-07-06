@@ -7,7 +7,6 @@ use App\Filament\Resources\TaskResource\RelationManagers;
 use App\Models\Task;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -170,16 +169,13 @@ class TaskResource extends Resource
                 ->columns(1)
                 ->collapsible(),
             Forms\Components\Section::make(__('Delay Reason'))
-                ->description(__('Required when the task is delayed'))
+                ->description(__('Optional — fill in only if the task is delayed'))
                 ->schema([
                     Forms\Components\Textarea::make('delay_reason')
                         ->label(__('Delay Reason'))
                         ->rows(2)->columnSpanFull()
-                        // إلزامي عند إكمال مهمة تجاوزت تاريخ النهاية
-                        ->required(fn (Get $get): bool => $get('status') === 'completed'
-                            && filled($get('due_date'))
-                            && \Illuminate\Support\Carbon::parse($get('due_date'))->isPast())
-                        ->helperText(__('Required when closing a delayed task')),
+                        // اختياري دائماً (يُملأ فقط عند وجود تأخير فعلي)
+                        ->helperText(__('Optional — only needed when the task is delayed')),
                     Forms\Components\Toggle::make('delay_needs_support')->label(__('Needs Support')),
                     Forms\Components\Toggle::make('delay_needs_approval')->label(__('Needs Approval')),
                     Forms\Components\Toggle::make('delay_needs_budget')->label(__('Needs Budget')),

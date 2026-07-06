@@ -61,6 +61,8 @@
     "Delay Reason": "سبب التأخير",
     "Required when closing a delayed task": "إلزامي عند إغلاق مهمة متأخرة",
     "Required when the task is delayed": "إلزامي عند تأخّر المهمة",
+    "Optional — fill in only if the task is delayed": "اختياري — يُملأ فقط إذا كانت المهمة متأخرة",
+    "Optional — only needed when the task is delayed": "اختياري — يلزم فقط عند تأخّر المهمة",
     "Needs Support": "يحتاج دعماً",
     "Needs Approval": "يحتاج موافقة",
     "Needs Budget": "يحتاج ميزانية",
