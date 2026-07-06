@@ -20,13 +20,43 @@
                 <th>{{ $h }}</th>
             @endforeach
         </tr>
-        @foreach ($report['rows'] as $row)
-            <tr>
-                @foreach ($row as $cell)
-                    <td>{{ $cell }}</td>
-                @endforeach
-            </tr>
-        @endforeach
+        @if (! empty($report['detailed']))
+            {{-- تفصيلي: كل الحقول مع تلوين ذكي للحالة/الأولوية/التأخير --}}
+            @foreach ($report['tasks'] as $t)
+                <tr>
+                    <td>{{ $t['title'] }}</td>
+                    <td>{{ $t['project'] }}</td>
+                    <td>{{ $t['department'] }}</td>
+                    <td>{{ $t['depts'] }}</td>
+                    <td style="background:{{ $t['status_color'] }};color:#ffffff;font-weight:bold;text-align:center">{{ $t['status'] }}</td>
+                    <td style="background:{{ $t['priority_color'] }};color:#ffffff;font-weight:bold;text-align:center">{{ $t['priority'] }}</td>
+                    <td style="text-align:center">{{ $t['progress'] }}%</td>
+                    <td>{{ $t['assigned'] }}</td>
+                    <td>{{ $t['creator'] }}</td>
+                    <td style="text-align:center">{{ $t['start_date'] }}</td>
+                    <td style="text-align:center">{{ $t['due_date'] }}</td>
+                    <td style="text-align:center;{{ $t['is_delayed'] ? 'background:#fee2e2;color:#dc2626;font-weight:bold' : 'color:#16a34a' }}">{{ $t['is_delayed'] ? 'نعم' : 'لا' }}</td>
+                    <td style="text-align:center">{{ $t['is_delayed'] ? $t['days_delayed'] : 0 }}</td>
+                    <td style="text-align:center">{{ $t['estimated_hours'] }}</td>
+                    <td style="text-align:center">{{ $t['actual_hours'] }}</td>
+                    <td>{{ $t['delay_reason'] }}</td>
+                    <td>{{ $t['needs'] }}</td>
+                    <td>{{ $t['obstacles'] }}</td>
+                    <td>{{ $t['risks'] }}</td>
+                    <td>{{ $t['notes'] }}</td>
+                    <td>{{ $t['description'] }}</td>
+                    <td style="text-align:center">{{ $t['created_at'] }}</td>
+                </tr>
+            @endforeach
+        @else
+            @foreach ($report['rows'] as $row)
+                <tr>
+                    @foreach ($row as $cell)
+                        <td>{{ $cell }}</td>
+                    @endforeach
+                </tr>
+            @endforeach
+        @endif
     </table>
 </body>
 </html>

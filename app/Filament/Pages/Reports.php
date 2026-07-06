@@ -51,7 +51,10 @@ class Reports extends Page
     public function getTypes(): array
     {
         if (! $this->isPrivileged()) {
-            return ['tasks' => ReportService::TYPES['tasks']];
+            return [
+                'tasks' => ReportService::TYPES['tasks'],
+                'tasks_detailed' => ReportService::TYPES['tasks_detailed'],
+            ];
         }
 
         return ReportService::TYPES;
@@ -75,7 +78,7 @@ class Reports extends Page
     /** هل يدعم نوع التقرير الحالي الفلاتر؟ */
     public function supportsFilters(): bool
     {
-        return in_array($this->type, ['tasks', 'delays']);
+        return in_array($this->type, ['tasks', 'tasks_detailed', 'delays']);
     }
 
     /** الفلاتر المطبّقة (تُمرّر للخدمة وروابط الطباعة/التصدير) */

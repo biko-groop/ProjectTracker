@@ -55,7 +55,7 @@
                 </select>
             </label>
 
-            @if ($type === 'tasks')
+            @if (in_array($type, ['tasks', 'tasks_detailed']))
                 <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.78rem;font-weight:700;color:#475569;">
                     الحالة
                     <select wire:model.live="status"
@@ -84,6 +84,9 @@
             </div>
         </div>
 
+        @if (! empty($report['detailed']))
+            @include('reports._detailed_cards', ['report' => $report])
+        @else
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table style="width:100%;border-collapse:collapse;font-size:.85rem;min-width:520px;">
             <thead>
@@ -110,6 +113,7 @@
             </tbody>
         </table>
         </div>
+        @endif
     </div>
 
 </x-filament-panels::page>

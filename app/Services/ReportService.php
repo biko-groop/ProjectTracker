@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskDepartment;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -16,6 +17,7 @@ class ReportService
     public const TYPES = [
         'projects' => 'تقرير المشاريع',
         'tasks' => 'تقرير المهام',
+        'tasks_detailed' => 'تقرير المهام التفصيلي',
         'workload' => 'تقرير أداء الموظفين',
         'delays' => 'تقرير التأخير',
         'departments' => 'تقرير الأقسام',
@@ -30,15 +32,101 @@ class ReportService
         'low' => 'منخفض', 'medium' => 'متوسط', 'high' => 'عالٍ', 'urgent' => 'عاجل',
     ];
 
+    // ألوان احترافية ذكية لتلوين الحالة/الأولوية في التقرير التفصيلي
+    private array $statusColor = [
+        'pending' => '#64748b', 'in_progress' => '#2563eb',
+        'completed' => '#16a34a', 'cancelled' => '#dc2626',
+    ];
+
+    private array $priorityColor = [
+        'low' => '#0891b2', 'medium' => '#d97706', 'high' => '#ea580c', 'urgent' => '#dc2626',
+    ];
+
     public function build(string $type, array $filters = []): array
     {
         return match ($type) {
             'tasks' => $this->tasks($filters),
+            'tasks_detailed' => $this->tasksDetailed($filters),
             'workload' => $this->workload(),
             'delays' => $this->delays($filters),
             'departments' => $this->departments(),
             default => $this->projects(),
         };
+    }
+
+    /**
+     * تقرير المهام التفصيلي: كل حقول المهمة، منسّق بألوان احترافية،
+     * مع بنية غنية (tasks) للعرض/الطباعة/PDF، وأعمدة (headers/rows) لتصدير Excel.
+     */
+    private function tasksDetailed(array $filters = []): array
+    {
+        $query = Task::with(['project', 'department', 'assignedUser', 'creator', 'departmentLinks.department']);
+        $this->applyTaskFilters($query, $filters);
+
+        $tasks = $query->orderByDesc('created_at')->get()->map(function (Task $t) {
+            $needs = array_filter([
+                $t->delay_needs_support ? 'دعم' : null,
+                $t->delay_needs_approval ? 'اعتماد' : null,
+                $t->delay_needs_budget ? 'ميزانية' : null,
+                $t->delay_needs_decision ? 'قرار' : null,
+            ]);
+
+            $depts = $t->departmentLinks
+                ->map(fn ($l) => (optional($l->department)->name ?? '?')
+                    . ' (' . (TaskDepartment::RESPONSIBILITIES[$l->responsibility] ?? $l->responsibility) . ')')
+                ->implode('، ');
+
+            return [
+                'title' => $t->title,
+                'project' => optional($t->project)->name ?? '—',
+                'department' => optional($t->department)->name ?? '—',
+                'depts' => $depts ?: '—',
+                'status' => $this->status[$t->status] ?? $t->status,
+                'status_color' => $this->statusColor[$t->status] ?? '#64748b',
+                'priority' => $this->priority[$t->priority] ?? $t->priority,
+                'priority_color' => $this->priorityColor[$t->priority] ?? '#64748b',
+                'progress' => (int) ($t->progress ?? 0),
+                'assigned' => optional($t->assignedUser)->name ?? '—',
+                'creator' => optional($t->creator)->name ?? '—',
+                'start_date' => optional($t->start_date)->format('Y-m-d') ?? '—',
+                'due_date' => optional($t->due_date)->format('Y-m-d') ?? '—',
+                'is_delayed' => $t->is_delayed,
+                'days_delayed' => $t->days_delayed,
+                'estimated_hours' => $t->estimated_hours !== null ? (string) $t->estimated_hours : '—',
+                'actual_hours' => $t->actual_hours !== null ? (string) $t->actual_hours : '—',
+                'delay_reason' => $t->delay_reason ?: '—',
+                'needs' => $needs ? implode('، ', $needs) : '—',
+                'obstacles' => $t->obstacles ?: '—',
+                'risks' => $t->potential_risks ?: '—',
+                'notes' => $t->notes ?: '—',
+                'description' => $t->description ?: '—',
+                'created_at' => optional($t->created_at)->format('Y-m-d') ?? '—',
+            ];
+        })->all();
+
+        // أعمدة مسطّحة لتصدير Excel (كل الحقول)
+        $headers = [
+            'المهمة', 'المشروع', 'القسم الرئيسي', 'الأقسام المعنية', 'الحالة', 'الأولوية',
+            'الإنجاز', 'المسؤول', 'المُنشئ', 'تاريخ البداية', 'تاريخ الاستحقاق', 'متأخرة؟',
+            'أيام التأخير', 'ساعات تقديرية', 'ساعات فعلية', 'سبب التأخير', 'احتياجات التأخير',
+            'العوائق', 'المخاطر المحتملة', 'الملاحظات', 'الوصف', 'تاريخ الإنشاء',
+        ];
+
+        $rows = array_map(fn ($t) => [
+            $t['title'], $t['project'], $t['department'], $t['depts'], $t['status'], $t['priority'],
+            $t['progress'] . '%', $t['assigned'], $t['creator'], $t['start_date'], $t['due_date'],
+            $t['is_delayed'] ? 'نعم' : 'لا', $t['is_delayed'] ? $t['days_delayed'] : 0,
+            $t['estimated_hours'], $t['actual_hours'], $t['delay_reason'], $t['needs'],
+            $t['obstacles'], $t['risks'], $t['notes'], $t['description'], $t['created_at'],
+        ], $tasks);
+
+        return [
+            'title' => 'تقرير المهام التفصيلي' . $this->filterSuffix($filters),
+            'detailed' => true,
+            'tasks' => $tasks,
+            'headers' => $headers,
+            'rows' => $rows,
+        ];
     }
 
     /**

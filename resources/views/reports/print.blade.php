@@ -56,26 +56,30 @@
         <span>عدد السجلات: {{ count($report['rows']) }}</span>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                @foreach ($report['headers'] as $h)
-                    <th>{{ $h }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($report['rows'] as $row)
+    @if (! empty($report['detailed']))
+        @include('reports._detailed_cards', ['report' => $report])
+    @else
+        <table>
+            <thead>
                 <tr>
-                    @foreach ($row as $cell)
-                        <td>{{ $cell }}</td>
+                    @foreach ($report['headers'] as $h)
+                        <th>{{ $h }}</th>
                     @endforeach
                 </tr>
-            @empty
-                <tr><td class="empty" colspan="{{ count($report['headers']) }}">لا توجد بيانات</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($report['rows'] as $row)
+                    <tr>
+                        @foreach ($row as $cell)
+                            <td>{{ $cell }}</td>
+                        @endforeach
+                    </tr>
+                @empty
+                    <tr><td class="empty" colspan="{{ count($report['headers']) }}">لا توجد بيانات</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    @endif
 
     <div class="footer">© {{ date('Y') }} نظام إدارة المشاريع — تقرير مُولَّد آلياً</div>
 
